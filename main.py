@@ -18,7 +18,7 @@ BATCH_SIZE = 32
 datagen = ImageDataGenerator(rescale=1./255)
 
 train_gen = datagen.flow_from_directory(
-    ".data/Human Bone Fractures Multi-modal Image Dataset (HBFMID)/Bone Fractures Detection/train",
+    ".data/Human Bone Fractures Multi-modal Image Dataset (HBFMID)/Bone Fractures Detection/train/images",
     target_size=IMG_SIZE,
     batch_size=BATCH_SIZE,
     class_mode="categorical",
@@ -26,7 +26,7 @@ train_gen = datagen.flow_from_directory(
 )
 
 valid_gen = datagen.flow_from_directory(
-    ".data/Human Bone Fractures Multi-modal Image Dataset (HBFMID)/Bone Fractures Detection/valid",
+    ".data/Human Bone Fractures Multi-modal Image Dataset (HBFMID)/Bone Fractures Detection/valid/images",
     target_size=IMG_SIZE,
     batch_size=BATCH_SIZE,
     class_mode="categorical",
@@ -34,7 +34,7 @@ valid_gen = datagen.flow_from_directory(
 )
 
 test_gen = datagen.flow_from_directory(
-    ".data/Human Bone Fractures Multi-modal Image Dataset (HBFMID)/Bone Fractures Detection/test",
+    ".data/Human Bone Fractures Multi-modal Image Dataset (HBFMID)/Bone Fractures Detection/test/images",
     target_size=IMG_SIZE,
     batch_size=BATCH_SIZE,
     class_mode="categorical",
