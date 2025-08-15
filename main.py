@@ -1,6 +1,7 @@
 #%%
 import tensorflow as tf
 import numpy as np
+import pandas as pd
 import os
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
@@ -9,37 +10,33 @@ from tensorflow.keras.applications import ResNet50
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
 from tensorflow.keras.optimizers import Adam
+import kagglehub
+
+#%%
+path = kagglehub.dataset_download("foyez767/x-ray-images-of-fractured-and-healthy-bones")
+
+categories = ["Fractured", "Non-Fractured"]
+
+print("Path to dataset files:", path)
 
 #%%
 
-IMG_SIZE = (224, 224)
-BATCH_SIZE = 32
+image_paths = []
+labels = []
 
-datagen = ImageDataGenerator(rescale=1./255)
+for category in categories:
+    category_path = os.path.join(path, category)
+    for image_name in os.listdir(category_path):
+        image_path = os.path.join(category_path, image_name)
+        image_paths.append(image_path)
+        labels.append(category)
 
-train_gen = datagen.flow_from_directory(
-    ".data/Human Bone Fractures Multi-modal Image Dataset (HBFMID)/Bone Fractures Detection/train/images",
-    target_size=IMG_SIZE,
-    batch_size=BATCH_SIZE,
-    class_mode="categorical",
-    shuffle=True
-)
-
-valid_gen = datagen.flow_from_directory(
-    ".data/Human Bone Fractures Multi-modal Image Dataset (HBFMID)/Bone Fractures Detection/valid/images",
-    target_size=IMG_SIZE,
-    batch_size=BATCH_SIZE,
-    class_mode="categorical",
-    shuffle=False
-)
-
-test_gen = datagen.flow_from_directory(
-    ".data/Human Bone Fractures Multi-modal Image Dataset (HBFMID)/Bone Fractures Detection/test/images",
-    target_size=IMG_SIZE,
-    batch_size=BATCH_SIZE,
-    class_mode="categorical",
-    shuffle=False
-)
+df = pd.DataFrame({
+    "image_path": image_paths,
+    "label": labels
+})
+#%%
+df.head()
 #%%
 
 base_model = ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
