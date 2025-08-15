@@ -84,5 +84,81 @@ ax.set_title("Distribution of Fracture Types - Pie Chart", fontsize=14, fontweig
 
 plt.show()
 #%%
+BATCH_SIZE = 128
+# Data Preprocessing
+datagen = ImageDataGenerator(
+    rescale=1./255,
+    validation_split=0.2,  # 20% for validation
+    horizontal_flip=True,
+    rotation_range=20,
+    zoom_range=0.2,
+    width_shift_range=0.1,
+    height_shift_range=0.1
+)
+train_generator = datagen.flow_from_dataframe(
+    dataframe=df,
+    directory=None,
+    x_col="image_path",
+    y_col="label",
+    target_size=(224, 224),
+    batch_size=BATCH_SIZE,
+    class_mode='categorical',
+    subset='training',
+    shuffle=True
+)
+validation_generator = datagen.flow_from_dataframe(
+    dataframe=df,
+    directory=None,
+    x_col="image_path",
+    y_col="label",
+    target_size=(224, 224),
+    batch_size=BATCH_SIZE,
+    class_mode='categorical',
+    subset='validation',
+    shuffle=False
+)
+#%%
 base_model = ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+
+x = base_model.output
+x = GlobalAveragePooling2D()(x)
+x = Dense(1024, activation='relu')(x)
+predictions = Dense(len(categories), activation='softmax')(x)
+model = Model(inputs=base_model.input, outputs=predictions)
+# Freeze the base model layers
+for layer in base_model.layers:
+    layer.trainable = False
+# Compile the model
+model.compile(optimizer=Adam(learning_rate=0.0001),
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+#%%
+# Train the model
+history = model.fit(
+    train_generator,
+    validation_data=validation_generator,
+    epochs=5,
+    steps_per_epoch=train_generator.samples // train_generator.batch_size,
+    validation_steps=validation_generator.samples // validation_generator.batch_size
+)
+#%%
+# Evaluate the model    
+loss, accuracy = model.evaluate(validation_generator)
+print(f"Validation Loss: {loss:.4f}, Validation Accuracy: {accuracy:.4f}")
+#%%
+# Plot training & validation accuracy values
+plt.figure(figsize=(12, 6))
+plt.subplot(1, 2, 1)
+plt.plot(history.history['accuracy'], label='Train Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.title('Model Accuracy')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend(loc='upper left')
+plt.subplot(1, 2, 2)
+plt.plot(history.history['loss'], label='Train Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.title('Model Loss')
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
 # %%
