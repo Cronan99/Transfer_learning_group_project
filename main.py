@@ -11,13 +11,13 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
 from tensorflow.keras.optimizers import Adam
 import kagglehub
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 #%%
-path = kagglehub.dataset_download("foyez767/x-ray-images-of-fractured-and-healthy-bones")
+path = ".data\X-ray Imaging Dataset for Detecting Fractured vs. Non-Fractured Bones\Augmented Dataset"
 
 categories = ["Fractured", "Non-Fractured"]
-
-print("Path to dataset files:", path)
 
 #%%
 
@@ -38,22 +38,51 @@ df = pd.DataFrame({
 #%%
 df.head()
 #%%
+df.tail()
+#%%
+df.shape
+#%%
+df.columns
+#%%
+df.duplicated().sum()
+#%%
+df.isnull().sum()
+#%%
+df.info()
+#%%
+df["label"].unique()
+#%%
+df["label"].value_counts()
+#%%
+sns.set_style("whitegrid")
 
+fig, ax = plt.subplots(figsize=(10, 6))
+sns.countplot(data=df, x="label", palette="viridis", ax=ax)
+
+ax.set_title("Distribution of Fracture Types", fontsize=14, fontweight='bold')
+ax.set_xlabel("Tumor Type", fontsize=12)
+ax.set_ylabel("Count", fontsize=12)
+
+for p in ax.patches:
+    ax.annotate(f'{int(p.get_height())}', 
+                (p.get_x() + p.get_width() / 2., p.get_height()), 
+                ha='center', va='bottom', fontsize=11, color='black', 
+                xytext=(0, 5), textcoords='offset points')
+
+plt.show()
+
+label_counts = df["label"].value_counts()
+
+fig, ax = plt.subplots(figsize=(8, 6))
+colors = sns.color_palette("viridis", len(label_counts))
+
+ax.pie(label_counts, labels=label_counts.index, autopct='%1.1f%%', 
+       startangle=140, colors=colors, textprops={'fontsize': 12, 'weight': 'bold'},
+       wedgeprops={'edgecolor': 'black', 'linewidth': 1})
+
+ax.set_title("Distribution of Fracture Types - Pie Chart", fontsize=14, fontweight='bold')
+
+plt.show()
+#%%
 base_model = ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
-
-x = base_model.output
-x = GlobalAveragePooling2D()(x)
-x = Dense(1024, activation='relu')(x)
-predictions = Dense(2, activation='softmax')(x)  
-
-model = Model(inputs=base_model.input, outputs=predictions)
-
-for layer in base_model.layers:
-    layer.trainable = False
-
-model.compile(optimizer=Adam(1e-3), loss="categorical_crossentropy", metrics=["accuracy"])
-
-model.fit(train_gen, validation_data=valid_gen, epochs=5)
-
-
 # %%
